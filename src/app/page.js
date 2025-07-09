@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dancing_Script } from '@next/font/google';
+import { Dancing_Script } from 'next/font/google';
 
 const dancingScript = Dancing_Script({ subsets: ['latin'], weight: ['400'] });
 
