@@ -23,20 +23,17 @@ export default function BirthdayGalleryPage() {
   const [form, setForm] = useState({ name: '', message: '' });
   const [activeIndex, setActiveIndex] = useState(0);
   const audioRef = useRef(null);
-  const [musicStarted, setMusicStarted] = useState(false);
   const scrollLine1 = useRef(null);
   const scrollLine2 = useRef(null);
   const [paused, setPaused] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const letters = ['B', 'A', 'O', 'N', 'H', 'I'];
 
   useEffect(() => {
     const timer = setTimeout(() => setShowIntro(false), 3000);
     return () => clearTimeout(timer);
   }, []);
-
 
   const fetchComments = async () => {
     try {
@@ -48,8 +45,6 @@ export default function BirthdayGalleryPage() {
       console.error(error);
     }
   };
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,7 +73,6 @@ export default function BirthdayGalleryPage() {
     }
   };
 
-
   useEffect(() => {
     fetchComments();
   }, []);
@@ -89,8 +83,6 @@ export default function BirthdayGalleryPage() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
-
-
 
   const getImageStyle = (index) => {
     const diff = (index - activeIndex + images.length) % images.length;
@@ -111,14 +103,12 @@ export default function BirthdayGalleryPage() {
 
     const animate = () => {
       if (!paused) {
-        // Hàng 1: trái → phải
         x1 += speed;
         if (scrollLine1.current) {
           scrollLine1.current.style.transform = `translateX(${x1}px)`;
           if (Math.abs(x1) >= scrollLine1.current.scrollWidth / 2) x1 = 0;
         }
 
-        // Hàng 2: phải → trái
         x2 -= speed;
         if (scrollLine2.current) {
           scrollLine2.current.style.transform = `translateX(${x2}px)`;
@@ -133,24 +123,28 @@ export default function BirthdayGalleryPage() {
     return () => cancelAnimationFrame(animationId);
   }, [paused, comments]);
 
-
+  // ✅ Tự động phát nhạc sau 1 giây
   useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = 1;
-      audio.muted = true;
-      audio
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setTimeout(() => (audio.muted = false), 500);
-        })
-        .catch((err) => {
-          console.warn('Autoplay bị chặn:', err.message);
-          setAudioBlocked(true);
-          setIsPlaying(false);
-        });
-    }
+    const timer = setTimeout(() => {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.volume = 1;
+        audio.muted = true;
+        audio
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+            setTimeout(() => (audio.muted = false), 500);
+          })
+          .catch((err) => {
+            console.warn('Autoplay bị chặn:', err.message);
+            setAudioBlocked(true);
+            setIsPlaying(false);
+          });
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -195,22 +189,15 @@ export default function BirthdayGalleryPage() {
             <span className="load w-16 h-16 rounded-full border-4 border-pink-500 border-t-transparent animate-spin"></span>
           </div>
         </div>
-
-
       )}
 
       {!showIntro && (
         <>
-
           <div
             className="min-h-screen overflow-hidden bg-white text-center mb-2 p-3 font-sans relative select-none"
             onContextMenu={(e) => e.preventDefault()}
           >
-
-            <div
-              className=" z-50 w-full pointer-events-none"
-              style={{ top: '20px' }}
-            >
+            <div className="z-50 w-full pointer-events-none" style={{ top: '20px' }}>
               <div className="relative h-15 mb-2 flex flex-col justify-between gap-2">
                 <div
                   className="flex whitespace-nowrap space-x-6 items-center px-4 py-2 absolute bottom-0"
@@ -234,6 +221,7 @@ export default function BirthdayGalleryPage() {
                 </div>
               </div>
             </div>
+
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-[0_1px_0_#1f2937]">HAPPY LEVEL UP</h1>
             <h1 className="text-4xl font-bold text-black mb-2">HAPPY LEVEL UP</h1>
             <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-[0_1px_0_#1f2937]">HAPPY LEVEL UP</h1>
@@ -310,14 +298,14 @@ export default function BirthdayGalleryPage() {
                     placeholder="Tên bạn"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-lg  placeholder-gray-700 focus:outline-pink-500"
+                    className="w-full p-3 mb-4 border border-gray-300 rounded-lg bg-gray-100 placeholder-gray-700 focus:outline-pink-500 focus:bg-gray-200"
                   />
 
                   <textarea
                     placeholder="Lời chúc"
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-lg  placeholder-gray-700 focus:outline-pink-500"
+                    className="w-full p-3 mb-4 border border-gray-300 rounded-lg bg-gray-100 placeholder-gray-700 focus:outline-pink-500 focus:bg-gray-200"
                     rows={4}
                   />
 
@@ -330,9 +318,7 @@ export default function BirthdayGalleryPage() {
                 </form>
               </div>
             )}
-
           </div>
-
         </>
       )}
     </>
