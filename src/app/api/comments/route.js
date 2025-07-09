@@ -1,36 +1,35 @@
-import { NextResponse } from 'next/server';
-import path from 'path';
-import { promises as fs } from 'fs';
-
-const filePath = path.join(process.cwd(), 'public/data/comments.json');
+import { db } from '@/lib/firebase';
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 export async function GET() {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return NextResponse.json(JSON.parse(data));
-  } catch (error) {
-    console.error('Error reading comments.json:', error);
-    return NextResponse.json([], { status: 500 });
-  }
+  const commentsRef = collection(db, 'comments');
+  const q = query(commentsRef, orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  
+  const comments = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+
+  return Response.json(comments);
 }
 
-export async function POST(request) {
+export async function POST(req) {
+  const { name, message } = await req.json();
+
+  if (!name || !message) {
+    return new Response(JSON.stringify({ error: 'Name and message are required' }), { status: 400 });
+  }
+
   try {
-    const newComment = await request.json();
-    if (!newComment.name || !newComment.message) {
-      return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
-    }
-
-     const data = await fs.readFile(filePath, 'utf-8');
-    const comments = JSON.parse(data);
-
-     comments.push(newComment);
-
-     await fs.writeFile(filePath, JSON.stringify(comments, null, 2), 'utf-8');
-
-    return NextResponse.json({ message: 'Comment saved' });
+    await addDoc(collection(db, 'comments'), {
+      name,
+      message,
+      createdAt: serverTimestamp(),
+    });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {
-    console.error('Error writing comments.json:', error);
-    return NextResponse.json({ error: 'Failed to save comment' }, { status: 500 });
+    console.error('Error adding comment:', error);
+    return new Response(JSON.stringify({ error: 'Failed to add comment' }), { status: 500 });
   }
 }
